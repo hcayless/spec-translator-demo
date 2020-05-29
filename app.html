@@ -53,6 +53,9 @@
           });
         });
       }
+      let normalize = function(str) {
+        return str.replace(/^( |\t)+/gm, "");
+      }
     </script>
     <script type="text/javascript">
       let c = new CETEI();
@@ -133,7 +136,7 @@
           "desc": [
             ["cetei-translate>tei-desc", function(elt){
               let result = document.createElement("form");
-              result.innerHTML = "<textarea>" + this.serialize(elt, true) + "</textarea>";
+              result.innerHTML = "<textarea>" + normalize(this.serialize(elt, true)) + "</textarea>";
               return result;
             }],
             ["*[lang=en]", ["<span class=\"translatable\">","</span>"]]
@@ -171,7 +174,7 @@
           "gloss": [
             ["cetei-translate>tei-gloss", function(elt){
               let result = document.createElement("form");
-              result.innerHTML = "<textarea>" + this.serialize(elt, true) + "</textarea>";
+              result.innerHTML = "<textarea>" + normalize(this.serialize(elt, true)) + "</textarea>";
               return result;
             }],
             ["*[lang=en]", ["<summary class=\"translatable\">", "</summary> "]]
@@ -179,7 +182,7 @@
           "remarks": [
             ["cetei-translate>tei-remarks", function(elt){
               let result = document.createElement("form");
-              result.innerHTML = "<textarea class=\"code\">" + this.serialize(elt, true) + "</textarea>";
+              result.innerHTML = "<textarea class=\"code\">" + normalize(this.serialize(elt, true)) + "</textarea>";
               return result;
             } ],
             ["*[lang=en]", function(elt) {
