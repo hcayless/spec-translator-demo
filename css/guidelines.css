@@ -1,0 +1,76 @@
+cetei-translate>tei-gloss {
+  display: inline;
+}
+cetei-translate>tei-desc {
+  display: inline;
+}
+cetei-translate>tei-remarks {
+  display: inline;
+}
+cetei-translate.exemplum {
+  display: block;
+  width: 40em;
+}
+cetei-translate.exemplum textarea {
+  height: 15em;
+}
+tei-elementspec {
+  display: block;
+}
+tei-gloss {
+  display: none;
+}
+tei-gloss[lang=en] {
+  display: inline;
+}
+tei-desc {
+  display: none;
+}
+tei-desc[lang=en] {
+  display: inline;
+}
+tei-remarks {
+  display: none;
+}
+tei-remarks[lang=en] {
+  display: inline;
+}
+pre {
+  font-family: "Noto Mono", Consolas, monospace;
+}
+body {
+  margin: 50px;
+}
+dl {
+  display: grid;
+  grid-template-columns: 1fr 9fr;
+  grid-auto-flow: row;
+}
+dt {
+  font-weight: bold;
+  grid-column: 1;
+}
+dd {
+  grid-column: 2;
+}
+nav {
+  background-color: silver;
+  font-family: 'Noto Sans', Verdana, Geneva, Tahoma, sans-serif;
+}
+nav li {
+  display: inline-block;
+  list-style-type: none;
+}
+summary {
+  display: inline;
+}
+summary::before {
+  content: "(";
+}
+summary::after {
+  content: ")";
+}
+textarea {
+  width: 100%;
+  height: 3em;
+}

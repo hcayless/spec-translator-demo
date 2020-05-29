@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <link rel="stylesheet" href="css/guidelines.css" title="no title" charset="utf-8">
+    <link rel="stylesheet" href="css/codemirror.css">
+    <script src="js/CETEI.js" charset="utf-8"></script>
+    <script src="js/i18n.js"></script>
+    <script src="js/codemirror.js"></script>
+    <script src="js/xml.js"></script>
+    <script>
+      const attstatus = {
+        "opt": "Optional",
+        "rec": "Recommended",
+        "req": "Required"
+      };
+      let conv = function(key, lang="en") {
+        return i18n.entries[key][lang];
+      }
+      let teiParent = function(elt) {
+        while (!elt.tagName.match(/TEI-/)) {
+          return teiParent(elt.parentElement);
+        }
+        return elt;
+      }
+      let toggleEdit = function(lang) {
+        document.querySelectorAll("cetei-translate").forEach(function(elt){
+          elt.parentNode.removeChild(elt);
+        });
+        document.querySelectorAll(".translatable").forEach(function(elt) {
+          let tr = document.createElement("cetei-translate");
+          let teiElt = teiParent(elt);
+          let langElt = teiElt.parentElement.querySelector(teiElt.localName + "[lang=" + lang.substring(1) + "]");
+          if (!langElt) {
+            langElt = teiElt.cloneNode();
+            langElt.setAttribute("lang", lang.substring(1));
+            langElt.setAttribute("xml:lang", lang.substring(1));
+          }
+          tr.appendChild(c.utilities.copyAndReset(langElt));
+          teiElt.insertAdjacentElement('afterend', tr);
+        });
+        document.querySelectorAll("tei-exemplum").forEach(function(elt) {
+          let tr = document.createElement("cetei-translate");
+          tr.setAttribute("class","exemplum");
+          tr.innerHTML = "<form><textarea class=\"code\">" + c.utilities.serialize(c.utilities.copyAndReset(elt)) + "</textarea></form>";
+          elt.insertAdjacentElement('afterend', tr);
+          
+        });
+        document.querySelectorAll("textarea.code").forEach(function(elt) {
+          CodeMirror.fromTextArea(elt, {
+            lineNumbers: true,
+            mode: {name: "xml", matchClosing: true}
+          });
+        });
+      }
+    </script>
+    <script type="text/javascript">
+      let c = new CETEI();
+      let behaviors = {
+        "tei": {
+          "attDef": function(elt) {
+            let result = document.createElement("dl");
+            let dt = document.createElement("dt");
+            dt.innerText = "@" + elt.getAttribute("ident");
+            let dd = document.createElement("dd");
+            for (let i =0; i < elt.childNodes.length; i++) {
+              dd.appendChild(elt.childNodes[i].cloneNode(true));
+            }
+            let dl = document.createElement("dl");
+            dl.innerHTML = '<dt>Status</dt>'
+              + '<dd>' + attstatus[elt.getAttribute("usage")] + '</dd>';
+            dd.appendChild(dl);
+            result.appendChild(dt);
+            result.appendChild(dd);
+            return result;
+          },
+          "attList": function(elt) {
+            let result = document.createElement("dl");
+            let dt = document.createElement("dt");
+            let dd = document.createElement("dd");
+            dt.innerText = "Attributes";
+            for (let i =0; i < elt.childNodes.length; i++) {
+              dd.appendChild(elt.childNodes[i].cloneNode(true));
+            }
+            result.appendChild(dt);
+            result.appendChild(dd);
+            return result;
+          },
+          "content": function(elt) {
+            let result = document.createElement("dl");
+            result.innerHTML = "<dt>Content model</dt><dd><pre>" + this.serialize(elt.querySelector("*"), false, "").replace(/</g, "&lt;") + "</pre></dd>";
+            return result;
+          },
+          "dataRef": ["<a href=\"$@key\">$@key</a>"],
+          "datatype": [
+            ["[minoccurs][maxoccurs]", function(elt) {
+              let result = document.createElement("dl");
+              result.innerHTML = "<dt>Datatype</dt>";
+              let dd = document.createElement("dd");
+              dd.appendChild(document.createTextNode(getAttribute("minoccurs") + '–' 
+                + (elt.getAttribute("maxoccurs") == 'unbounded' ? '∞' : elt.getAttribute("maxoccurs")) 
+                + ' of '));
+              dd.appendChild(elt.querySelector("tei-dataref").cloneNode());
+              if (elt.getAttribute("maxoccurs") == "unbounded" || parseInt(elt.getAttribute("maxoccurs"), 10) > 1) {
+                dd.appendChild(document.createTextNode(" separated by whitespace"));
+              }
+              result.appendChild(dd);
+              return result;
+            }],
+            ["[maxoccurs]", function(elt) {
+              let result = document.createElement("dl");
+              result.innerHTML = "<dt>Datatype</dt>";
+              let dd = document.createElement("dd");
+              dd.appendChild(document.createTextNode('1–' 
+                + (elt.getAttribute("maxoccurs") == 'unbounded' ? '∞' : elt.getAttribute("maxoccurs")) 
+                + ' of '));
+              dd.appendChild(elt.querySelector("tei-dataref").cloneNode());
+              if (elt.getAttribute("maxoccurs") == "unbounded" || parseInt(elt.getAttribute("maxoccurs"), 10) > 1) {
+                dd.appendChild(document.createTextNode(" separated by whitespace"));
+              }
+              result.appendChild(dd);
+              return result;
+            }],
+            ["*", function(elt) {
+              let result = document.createElement("dl");
+              result.innerHTML = "<dt>Datatype</dt>";
+              let dd = document.createElement("dd");
+              dd.appendChild(elt.querySelector("tei-dataref").cloneNode());
+              result.appendChild(dd);
+              return result;
+            }]
+          ],
+          "desc": [
+            ["cetei-translate>tei-desc", function(elt){
+              let result = document.createElement("form");
+              result.innerHTML = "<textarea>" + this.serialize(elt, true) + "</textarea>";
+              return result;
+            }],
+            ["*[lang=en]", ["<span class=\"translatable\">","</span>"]]
+          ],
+          "elementSpec": function(elt) {
+            let result = document.createDocumentFragment();
+            let header = document.createElement("h1");
+            header.innerText = "<" + elt.getAttribute("ident") + ">";
+            result.appendChild(header);
+            let glosses = elt.querySelectorAll("tei-elementspec>tei-gloss");
+            for (let i =0; i < glosses.length; i++) {
+              result.appendChild(glosses[i].cloneNode(true));
+            }
+            let descs = elt.querySelectorAll("tei-elementspec>tei-desc");
+            for (let i =0; i < descs.length; i++) {
+              result.appendChild(descs[i].cloneNode(true));
+            }
+            let dl = document.createElement("dl");
+            let dt = document.createElement("dt");
+            let dd = document.createElement("dd");
+            dt.innerText = "Module";
+            dd.innerText = elt.getAttribute("module");
+            dl.appendChild(dt);
+            dl.appendChild(dd);
+            result.appendChild(dl);
+            result.appendChild(elt.querySelector("tei-attlist").cloneNode(true));
+            let exempla = elt.querySelectorAll("tei-exemplum");
+            for (let i =0; i < exempla.length; i++) {
+              result.appendChild(exempla[i].cloneNode(true));
+            }
+            result.appendChild(elt.querySelector("tei-content").cloneNode(true));
+            return result;
+          },
+          "exemplum": ["<dl><dt>Example</dt><dd>", "</dd></dl>"],
+          "gloss": [
+            ["cetei-translate>tei-gloss", function(elt){
+              let result = document.createElement("form");
+              result.innerHTML = "<textarea>" + this.serialize(elt, true) + "</textarea>";
+              return result;
+            }],
+            ["*[lang=en]", ["<summary class=\"translatable\">", "</summary> "]]
+          ],
+          "remarks": [
+            ["cetei-translate>tei-remarks", function(elt){
+              let result = document.createElement("form");
+              result.innerHTML = "<textarea class=\"code\">" + this.serialize(elt, true) + "</textarea>";
+              return result;
+            } ],
+            ["*[lang=en]", function(elt) {
+              let result = document.createElement("dl");
+              result.innerHTML = "<dt>Notes</dt><dd class=\"translatable\">" + elt.innerHTML + "</dd>";
+              return result;
+            }]
+          ]
+        }
+      }
+      c.addBehaviors(behaviors);
+      c.getHTML5('https://raw.githubusercontent.com/TEIC/TEI/dev/P5/Source/Specs/app.xml?new=' + Date.now(), function(data) {
+        document.getElementsByTagName("body")[0].appendChild(data);
+      });
+    </script>
+  </head>
+  <body>
+    <nav>
+      <ul class="languages">
+        <li>Click to translate:</li>
+        <li>[<a href="#fr">Français</a>]</li>
+        <li>[<a href="#de">Deutsch</a>]</li>
+      </ul>  
+    </nav>
+    <script>
+      document.querySelectorAll(".languages a").forEach(function(elt){
+        elt.addEventListener('click', function(event) {
+          toggleEdit(elt.getAttribute("href"));
+          return false;
+        });
+      });  
+    </script>
+  </body>
+</html>
