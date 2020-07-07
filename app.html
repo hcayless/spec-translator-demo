@@ -15,7 +15,11 @@
         "req": "Required"
       };
       let conv = function(key, lang="en") {
-        return i18n.entries[key][lang];
+        if (i18n.entries[key] && i18n.entries[key][lang]) {
+          return i18n.entries[key][lang];
+        } else {
+          return key;
+        }
       }
       let teiParent = function(elt) {
         while (!elt.tagName.match(/TEI-/)) {
@@ -26,6 +30,9 @@
       let toggleEdit = function(lang) {
         document.querySelectorAll("cetei-translate").forEach(function(elt){
           elt.parentNode.removeChild(elt);
+        });
+        document.querySelectorAll(".i18n").forEach(function(elt) {
+          elt.innerText = conv(elt.innerText, lang.substring(1));
         });
         document.querySelectorAll(".translatable").forEach(function(elt) {
           let tr = document.createElement("cetei-translate");
@@ -70,7 +77,7 @@
               dd.appendChild(elt.childNodes[i].cloneNode(true));
             }
             let dl = document.createElement("dl");
-            dl.innerHTML = '<dt>Status</dt>'
+            dl.innerHTML = '<dt><span class=\"i18n\">Status</span></dt>'
               + '<dd>' + attstatus[elt.getAttribute("usage")] + '</dd>';
             dd.appendChild(dl);
             result.appendChild(dt);
@@ -91,14 +98,14 @@
           },
           "content": function(elt) {
             let result = document.createElement("dl");
-            result.innerHTML = "<dt>Content model</dt><dd><pre>" + this.serialize(elt.querySelector("*"), false, "").replace(/</g, "&lt;") + "</pre></dd>";
+            result.innerHTML = "<dt><span class=\"i18n\">Content model</span></dt><dd><pre>" + this.serialize(elt.querySelector("*"), false, "").replace(/</g, "&lt;") + "</pre></dd>";
             return result;
           },
           "dataRef": ["<a href=\"$@key\">$@key</a>"],
           "datatype": [
             ["[minoccurs][maxoccurs]", function(elt) {
               let result = document.createElement("dl");
-              result.innerHTML = "<dt>Datatype</dt>";
+              result.innerHTML = "<dt><span class=\"i18n\">Datatype</sapn></dt>";
               let dd = document.createElement("dd");
               dd.appendChild(document.createTextNode(getAttribute("minoccurs") + '–' 
                 + (elt.getAttribute("maxoccurs") == 'unbounded' ? '∞' : elt.getAttribute("maxoccurs")) 
@@ -112,7 +119,7 @@
             }],
             ["[maxoccurs]", function(elt) {
               let result = document.createElement("dl");
-              result.innerHTML = "<dt>Datatype</dt>";
+              result.innerHTML = "<dt><span class=\"i18n\">Datatype</span></dt>";
               let dd = document.createElement("dd");
               dd.appendChild(document.createTextNode('1–' 
                 + (elt.getAttribute("maxoccurs") == 'unbounded' ? '∞' : elt.getAttribute("maxoccurs")) 
@@ -126,7 +133,7 @@
             }],
             ["*", function(elt) {
               let result = document.createElement("dl");
-              result.innerHTML = "<dt>Datatype</dt>";
+              result.innerHTML = "<dt><span class=\"i18n\">Datatype</span></dt>";
               let dd = document.createElement("dd");
               dd.appendChild(elt.querySelector("tei-dataref").cloneNode());
               result.appendChild(dd);
@@ -157,7 +164,7 @@
             let dl = document.createElement("dl");
             let dt = document.createElement("dt");
             let dd = document.createElement("dd");
-            dt.innerText = "Module";
+            dt.innerHTML = "<span class=\"i18n\">Module</span>";
             dd.innerText = elt.getAttribute("module");
             dl.appendChild(dt);
             dl.appendChild(dd);
@@ -187,7 +194,7 @@
             } ],
             ["*[lang=en]", function(elt) {
               let result = document.createElement("dl");
-              result.innerHTML = "<dt>Notes</dt><dd class=\"translatable\">" + elt.innerHTML + "</dd>";
+              result.innerHTML = "<dt><span class=\"i18n\">Notes</span></dt><dd class=\"translatable\">" + elt.innerHTML + "</dd>";
               return result;
             }]
           ]
@@ -203,8 +210,12 @@
     <nav>
       <ul class="languages">
         <li>Click to translate:</li>
-        <li>[<a href="#fr">Français</a>]</li>
         <li>[<a href="#de">Deutsch</a>]</li>
+        <li>[<a href="#es">Español</a>]</li>
+        <li>[<a href="#fr">Français</a>]</li>
+        <li>[<a href="#it">Italiano</a>]</li>
+        <li>[<a href="#ja">日本語</a>]</li>
+        <li>[<a href="#ko">한국어</a>]</li>
       </ul>  
     </nav>
     <script>
